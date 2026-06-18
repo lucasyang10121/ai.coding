@@ -251,10 +251,15 @@ a {
   background: linear-gradient(180deg, #fff6f1, #fff);
 }
 
+.athletics-grid,
 .subject-grid,
 .hobby-grid {
   display: grid;
   gap: 1rem;
+}
+
+.athletics-grid {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .subject-grid {
@@ -265,9 +270,26 @@ a {
   grid-template-columns: repeat(4, 1fr);
 }
 
+.athletics-card,
 .subject-card,
 .hobby-card {
   padding: 1.5rem;
+}
+
+.athletics-card {
+  background: linear-gradient(180deg, #fff7f2, #fff);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 0.4rem;
 }
 
 .subject-card h3,
@@ -317,6 +339,7 @@ a {
 @media (max-width: 900px) {
   .hero-grid,
   .about-grid,
+  .athletics-grid,
   .subject-grid,
   .hobby-grid {
     grid-template-columns: 1fr 1fr;
@@ -346,6 +369,7 @@ a {
 
   .hero-grid,
   .about-grid,
+  .athletics-grid,
   .subject-grid,
   .hobby-grid {
     grid-template-columns: 1fr;
