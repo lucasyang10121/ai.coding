@@ -1,15 +1,15 @@
 :root {
-  --bg: #f5f7ff;
-  --surface: #ffffff;
-  --surface-2: #eef3ff;
-  --text: #14213d;
-  --muted: #5f6c95;
-  --primary: #6a5cf6;
-  --primary-dark: #4f3ce5;
-  --secondary: #ff7f50;
-  --accent: #2dd4bf;
-  --border: #e7eaff;
-  --shadow: 0 20px 45px rgba(29, 37, 98, 0.08);
+  --bg: #fff7f4;
+  --surface: #fffaf8;
+  --surface-2: #fff0e8;
+  --text: #3d1d1d;
+  --muted: #7a5757;
+  --primary: #d64545;
+  --primary-dark: #a62f2f;
+  --secondary: #ff8d6b;
+  --accent: #f4a261;
+  --border: #f5d7d0;
+  --shadow: 0 20px 45px rgba(138, 38, 38, 0.12);
   --radius: 22px;
   --container: 1120px;
 }
@@ -27,8 +27,8 @@ html {
 body {
   font-family: 'Inter', sans-serif;
   background:
-    radial-gradient(circle at top, rgba(106, 92, 246, 0.08), transparent 18%),
-    var(--bg);
+    radial-gradient(circle at top, rgba(214, 69, 69, 0.1), transparent 18%),
+    linear-gradient(180deg, #fff9f7 0%, var(--bg) 100%);
   color: var(--text);
   line-height: 1.6;
 }
@@ -55,9 +55,9 @@ a {
   position: sticky;
   top: 0;
   z-index: 999;
-  background: rgba(245, 247, 255, 0.78);
+  background: rgba(255, 247, 244, 0.82);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(231, 234, 255, 0.8);
+  border-bottom: 1px solid rgba(245, 215, 208, 0.8);
 }
 
 .nav {
@@ -146,9 +146,9 @@ a {
 }
 
 .btn-primary {
-  background: linear-gradient(90deg, var(--primary), #8b7bff);
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
   color: #fff;
-  box-shadow: 0 10px 18px rgba(106, 92, 246, 0.3);
+  box-shadow: 0 10px 18px rgba(214, 69, 69, 0.28);
 }
 
 .btn-secondary {
@@ -190,7 +190,7 @@ a {
 
 .hero-card {
   padding: 2rem;
-  background: linear-gradient(180deg, #f7f5ff, #ffffff);
+  background: linear-gradient(180deg, #fff5f1, #ffffff);
   text-align: center;
 }
 
@@ -209,8 +209,8 @@ a {
 
 .card-pill {
   display: inline-block;
-  background: #eefbf8;
-  color: #0f7c6b;
+  background: #fff1e8;
+  color: #a84a2d;
   border-radius: 999px;
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
@@ -248,7 +248,7 @@ a {
 
 .school-card {
   padding: 1.7rem;
-  background: linear-gradient(180deg, #fff7f0, #fff);
+  background: linear-gradient(180deg, #fff6f1, #fff);
 }
 
 .subject-grid,
@@ -280,7 +280,7 @@ a {
   align-items: center;
   justify-content: space-between;
   padding: 1.8rem;
-  background: linear-gradient(90deg, #f5f1ff, #eefcff);
+  background: linear-gradient(90deg, #fff3ea, #ffe7e0);
 }
 
 .link-buttons {
