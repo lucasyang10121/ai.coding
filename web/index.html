@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Resume</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <nav class="nav container">
+        <a href="#home" class="logo">Avery J.</a>
+        <div class="nav-links">
+          <a href="#about">About</a>
+          <a href="#subjects">Subjects</a>
+          <a href="#hobbies">Hobbies</a>
+          <a href="#links">Links</a>
+        </div>
+        <a href="#links" class="nav-btn">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="home">
+        <div class="container hero-grid">
+          <div class="hero-content reveal">
+            <p class="eyebrow">Student Portfolio</p>
+            <h1>Avery Johnson</h1>
+            <p class="hero-text">
+              Passionate learner who enjoys creativity, teamwork, and exploring new ideas every day.
+            </p>
+            <div class="hero-actions">
+              <a href="#links" class="btn btn-primary">View Links</a>
+              <a href="#about" class="btn btn-secondary">Learn More</a>
+            </div>
+            <div class="quick-facts">
+              <div>
+                <strong>Grade</strong>
+                <span>11th</span>
+              </div>
+              <div>
+                <strong>School</strong>
+                <span>Northview High</span>
+              </div>
+            </div>
+          </div>
+          <div class="hero-card reveal">
+            <div class="avatar-circle">AJ</div>
+            <div class="card-pill">Top Student • Honor Roll</div>
+            <h3>Student Highlights</h3>
+            <ul>
+              <li>Creative problem solver</li>
+              <li>Active in clubs</li>
+              <li>Enjoys reading and coding</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="about section" id="about">
+        <div class="container about-grid">
+          <div class="section-heading reveal">
+            <p class="eyebrow">About Me</p>
+            <h2>Student life & goals</h2>
+          </div>
+          <div class="about-card reveal">
+            <p>
+              I am a curious and hardworking student who loves learning both inside and outside the classroom.
+              I enjoy collaborating with others, taking on challenges, and building projects that make a positive impact.
+            </p>
+          </div>
+          <div class="school-card reveal">
+            <h3>School Information</h3>
+            <p><span>School:</span> Northview High School</p>
+            <p><span>Grade:</span> 11th Grade</p>
+            <p><span>Class President:</span> Student Leadership Team</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="subjects section" id="subjects">
+        <div class="container">
+          <div class="section-heading reveal">
+            <p class="eyebrow">Favorite Subjects</p>
+            <h2>What I enjoy learning</h2>
+          </div>
+          <div class="subject-grid">
+            <article class="subject-card reveal">
+              <h3>Mathematics</h3>
+              <p>Problem-solving, logic, and discovering patterns.</p>
+            </article>
+            <article class="subject-card reveal">
+              <h3>Science</h3>
+              <p>Experiments, curiosity, and understanding the world.</p>
+            </article>
+            <article class="subject-card reveal">
+              <h3>Computer Science</h3>
+              <p>Building websites, learning code, and creating ideas.</p>
+            </article>
+            <article class="subject-card reveal">
+              <h3>English</h3>
+              <p>Reading stories, writing creatively, and improving communication.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="hobbies section" id="hobbies">
+        <div class="container">
+          <div class="section-heading reveal">
+            <p class="eyebrow">Hobbies & Activities</p>
+            <h2>Things I love to do</h2>
+          </div>
+          <div class="hobby-grid">
+            <article class="hobby-card reveal">
+              <span>🎨</span>
+              <h3>Drawing</h3>
+              <p>I enjoy sketching and creating colorful artwork in my free time.</p>
+            </article>
+            <article class="hobby-card reveal">
+              <span>📚</span>
+              <h3>Reading</h3>
+              <p>I love discovering new books and learning from different perspectives.</p>
+            </article>
+            <article class="hobby-card reveal">
+              <span>🏀</span>
+              <h3>Sports</h3>
+              <p>Basketball and swimming help me stay active and focused.</p>
+            </article>
+            <article class="hobby-card reveal">
+              <span>💻</span>
+              <h3>Coding</h3>
+              <p>I enjoy building small projects and learning new technologies.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="links section" id="links">
+        <div class="container links-panel reveal">
+          <div>
+            <p class="eyebrow">Links</p>
+            <h2>Connect with me</h2>
+          </div>
+          <div class="link-buttons">
+            <a href="https://github.com" target="_blank">GitHub</a>
+            <a href="https://linkedin.com" target="_blank">LinkedIn</a>
+            <a href="mailto:avery.johnson@example.com">Email</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© <span id="year"></span> Avery Johnson. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
