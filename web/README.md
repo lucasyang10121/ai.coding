@@ -1,7 +1,4 @@
 # ai.coding
-ai
+My resume
 
-update my computer
-
-nei
-ndifnevsinkjnkjnkjnjknnk
+![Screenshot](Resume.png)
