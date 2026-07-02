@@ -108,5 +108,24 @@
       <li><a href="index.html">Back to home</a></li>
     </ul>
   </div>
+  <script>
+    const links = document.querySelectorAll('a');
+    const title = document.querySelector('h1');
+
+    links.forEach((link, index) => {
+      link.addEventListener('mouseenter', () => {
+        title.style.transform = 'scale(1.05)';
+        title.style.transition = 'transform 0.2s ease';
+      });
+
+      link.addEventListener('mouseleave', () => {
+        title.style.transform = 'scale(1)';
+      });
+
+      link.addEventListener('click', () => {
+        link.textContent = 'Opening...';
+      });
+    });
+  </script>
 </body>
 </html>
