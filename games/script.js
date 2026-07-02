@@ -14,6 +14,8 @@ const keys = {};
 const projectiles = [];
 const fallingHazards = [];
 const powerUps = [];
+const bossShards = [];
+const confettiPieces = [];
 const goalDodges = 500;
 const maxStage = 10;
 const stageDuration = 20;
@@ -34,6 +36,8 @@ let buffMessage = "";
 let buffMessageTimer = 0;
 let timeOfDay = "day";
 let attackCooldown = 0;
+let bossSpawnTimer = 0;
+let bossCheckpointShown = false;
 
 const rocket = {
   x: 0,
@@ -48,12 +52,18 @@ const rocket = {
 };
 
 const cannons = [];
+const boss = {
+  active: false,
+  health: 6000,
+  maxHealth: 6000,
+};
 
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   arenaPaddingX = Math.min(90, Math.max(58, canvas.width * 0.12));
   arenaPaddingY = Math.min(110, Math.max(84, canvas.height * 0.16));
+  canvas.style.touchAction = "none";
   if (gameState !== "ready") {
     rocket.x = Math.min(canvas.width - arenaPaddingX, Math.max(arenaPaddingX, rocket.x));
     rocket.y = Math.min(canvas.height - 90, Math.max(arenaPaddingY, rocket.y));
@@ -74,6 +84,8 @@ function resetGame() {
   projectiles.length = 0;
   fallingHazards.length = 0;
   powerUps.length = 0;
+  bossShards.length = 0;
+  confettiPieces.length = 0;
   rocket.x = canvas.width / 2;
   rocket.y = canvas.height - 90;
   rocket.boostActive = false;
@@ -82,6 +94,11 @@ function resetGame() {
   rocket.smallHitboxTimer = 0;
   timeOfDay = "day";
   attackCooldown = 0;
+  bossSpawnTimer = 0;
+  boss.active = false;
+  boss.health = 6000;
+  boss.maxHealth = 6000;
+  bossCheckpointShown = false;
   buffMessage = "Gold = attack blast, Cyan = shield, Purple = shrink";
   buffMessageTimer = 2.8;
   cannons.length = 0;
@@ -173,6 +190,21 @@ function update(deltaTime) {
     buildCannons();
   }
 
+  if (stage === 5 && !boss.active) {
+    boss.active = true;
+    boss.health = 6000;
+    boss.maxHealth = 6000;
+    bossSpawnTimer = 0;
+    if (!bossCheckpointShown) {
+      bossCheckpointShown = true;
+      buffMessage = "Checkpoint: Stage 5 — Void Gate. Avoid the black shards.";
+      buffMessageTimer = 3.2;
+    }
+  }
+  if (stage !== 5) {
+    boss.active = false;
+  }
+
   if (attackCooldown > 0) {
     attackCooldown = Math.max(0, attackCooldown - deltaTime);
   }
@@ -226,6 +258,14 @@ function update(deltaTime) {
   const hazardSpawnChance = Math.max(0.007, 0.025 - stage * 0.0012);
   if (Math.random() < hazardSpawnChance) {
     spawnHazard();
+  }
+
+  if (boss.active) {
+    bossSpawnTimer += deltaTime;
+    if (bossSpawnTimer >= 0.65) {
+      spawnBossShard();
+      bossSpawnTimer = 0;
+    }
   }
 
   for (let i = projectiles.length - 1; i >= 0; i -= 1) {
@@ -288,12 +328,51 @@ function update(deltaTime) {
     }
   }
 
+  for (let i = bossShards.length - 1; i >= 0; i -= 1) {
+    const shard = bossShards[i];
+    shard.x += shard.vx * deltaTime;
+    shard.y += shard.vy * deltaTime;
+    shard.vy += 10 * deltaTime;
+
+    const hitboxRadius = rocket.smallHitboxTimer > 0 ? rocket.size * 0.58 : rocket.size;
+    if (Math.hypot(shard.x - rocket.x, shard.y - rocket.y) <= shard.radius + hitboxRadius) {
+      if (rocket.immunityTimer > 0) {
+        rocket.immunityTimer = 0;
+        bossShards.splice(i, 1);
+      } else {
+        endGame(false);
+        return;
+      }
+    }
+
+    if (shard.explosive && shard.y > canvas.height * 0.45) {
+      burstShard(shard.x, shard.y);
+      bossShards.splice(i, 1);
+      continue;
+    }
+
+    if (shard.y - shard.radius > canvas.height || shard.x < -120 || shard.x > canvas.width + 120) {
+      bossShards.splice(i, 1);
+    }
+  }
+
   for (let i = powerUps.length - 1; i >= 0; i -= 1) {
     const powerUp = powerUps[i];
     const hitboxRadius = rocket.smallHitboxTimer > 0 ? rocket.size * 0.58 : rocket.size;
     if (Math.hypot(powerUp.x - rocket.x, powerUp.y - rocket.y) <= powerUp.radius + hitboxRadius) {
-      applyPowerUp(powerUp.type);
+      collectPowerUp(powerUp);
       powerUps.splice(i, 1);
+    }
+  }
+
+  for (let i = confettiPieces.length - 1; i >= 0; i -= 1) {
+    const piece = confettiPieces[i];
+    piece.x += piece.vx * deltaTime;
+    piece.y += piece.vy * deltaTime;
+    piece.vy += 180 * deltaTime;
+    piece.life -= deltaTime;
+    if (piece.life <= 0) {
+      confettiPieces.splice(i, 1);
     }
   }
 
@@ -338,19 +417,20 @@ function spawnPowerUp() {
   powerUps.push(powerUp);
 }
 
-function applyPowerUp(type) {
-  if (type === "attack") {
+function collectPowerUp(powerUp) {
+  if (powerUp.type === "attack") {
     rocket.boostActive = true;
     rocket.boostTimer = 10;
-    buffMessage = "Attack ready! Press space to blast balls.";
-  } else if (type === "immunity") {
+    buffMessage = "Attack ready! Press space to blast nearby hazards.";
+  } else if (powerUp.type === "immunity") {
     rocket.immunityTimer = 8;
     buffMessage = "Shield active! One hit won't stop you.";
-  } else if (type === "shrink") {
+  } else if (powerUp.type === "shrink") {
     rocket.smallHitboxTimer = 8;
     buffMessage = "Hitbox reduced!";
   }
   buffMessageTimer = 2.4;
+  spawnConfetti(powerUp.x, powerUp.y);
 }
 
 function triggerAttack() {
@@ -367,18 +447,36 @@ function triggerAttack() {
       fallingHazards.splice(i, 1);
     }
   }
-  buffMessage = "Blast! Nearby hazards cleared.";
-  buffMessageTimer = 1.8;
+  for (let i = bossShards.length - 1; i >= 0; i -= 1) {
+    const shard = bossShards[i];
+    if (Math.hypot(shard.x - rocket.x, shard.y - rocket.y) <= radius) {
+      bossShards.splice(i, 1);
+      if (boss.active) {
+        boss.health = Math.max(0, boss.health - 280);
+      }
+    }
+  }
+  if (boss.active && boss.health <= 0) {
+    boss.active = false;
+    buffMessage = "Void Gate shattered!";
+    buffMessageTimer = 2.2;
+  } else {
+    buffMessage = "Blast! Nearby hazards cleared.";
+    buffMessageTimer = 1.8;
+  }
 }
 
 function render() {
   drawBackground();
   drawGround();
   drawCannons();
+  drawBoss();
   drawHazards();
   drawPowerUps();
   drawRocket();
   drawProjectiles();
+  drawBossShards();
+  drawConfetti();
   drawBuffMessage();
 }
 
@@ -424,9 +522,9 @@ function drawBackground() {
 
 function drawGround() {
   const isNight = timeOfDay === "night";
-  ctx.fillStyle = isNight ? "#132336" : "#2d6b3b";
+  ctx.fillStyle = isNight ? "#0d1423" : "#1c4d2f";
   ctx.fillRect(0, canvas.height - 54, canvas.width, 54);
-  ctx.fillStyle = isNight ? "#27415b" : "#4f9b53";
+  ctx.fillStyle = isNight ? "#20374b" : "#3a7c42";
   ctx.fillRect(0, canvas.height - 54, canvas.width, 8);
 }
 
@@ -447,27 +545,33 @@ function drawCannons() {
 }
 
 function drawRocket() {
-  const scale = 1 + Math.min(3, stage - 1) * 0.04;
+  const scale = 1 + Math.min(3, stage - 1) * 0.05;
   ctx.save();
   ctx.translate(rocket.x, rocket.y);
   ctx.scale(scale, scale);
 
-  ctx.fillStyle = "#f8f9ff";
+  ctx.shadowBlur = 24;
+  ctx.shadowColor = "rgba(93, 178, 255, 0.45)";
+
+  ctx.fillStyle = "#f6f7ff";
   ctx.beginPath();
-  ctx.moveTo(0, -30);
-  ctx.lineTo(16, 20);
-  ctx.lineTo(9, 16);
-  ctx.lineTo(0, 24);
-  ctx.lineTo(-9, 16);
-  ctx.lineTo(-16, 20);
+  ctx.moveTo(0, -32);
+  ctx.lineTo(16, 22);
+  ctx.lineTo(10, 18);
+  ctx.lineTo(0, 28);
+  ctx.lineTo(-10, 18);
+  ctx.lineTo(-16, 22);
   ctx.closePath();
   ctx.fill();
 
+  ctx.fillStyle = "#0f1630";
+  ctx.fillRect(-12, -8, 24, 20);
   ctx.fillStyle = "#4a8cff";
-  ctx.fillRect(-10, -10, 20, 24);
-  ctx.fillRect(-6, -32, 12, 20);
+  ctx.fillRect(-8, -8, 16, 16);
+  ctx.fillStyle = "#4dffeb";
+  ctx.fillRect(-4, -28, 8, 18);
 
-  ctx.fillStyle = "#ff8e3c";
+  ctx.fillStyle = "#ff8b3d";
   ctx.beginPath();
   ctx.moveTo(-8, 18);
   ctx.lineTo(0, 34);
@@ -476,13 +580,19 @@ function drawRocket() {
   ctx.fill();
 
   ctx.fillStyle = "#ff5f5f";
-  ctx.fillRect(-4, -4, 8, 6);
+  ctx.fillRect(-3, 2, 6, 8);
+
+  ctx.fillStyle = "#ffd166";
+  ctx.beginPath();
+  ctx.arc(-10, 0, 4, 0, Math.PI * 2);
+  ctx.arc(10, 0, 4, 0, Math.PI * 2);
+  ctx.fill();
 
   if (rocket.boostActive) {
     ctx.fillStyle = "#7df9ff";
     ctx.beginPath();
     ctx.moveTo(-5, 26);
-    ctx.lineTo(0, 40);
+    ctx.lineTo(0, 42);
     ctx.lineTo(5, 26);
     ctx.closePath();
     ctx.fill();
@@ -491,9 +601,11 @@ function drawRocket() {
     ctx.strokeStyle = "#7df9ff";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(0, 2, 28, 0, Math.PI * 2);
+    ctx.arc(0, 2, 30, 0, Math.PI * 2);
     ctx.stroke();
   }
+
+  ctx.shadowBlur = 0;
   ctx.restore();
 }
 
@@ -507,6 +619,39 @@ function drawProjectiles() {
     ctx.strokeStyle = "#8f0000";
     ctx.stroke();
   });
+}
+
+function drawBoss() {
+  if (!boss.active) return;
+  const x = canvas.width / 2;
+  const y = 86;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = "rgba(255,255,255,0.18)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-140, 12, 280, 12);
+  ctx.fillStyle = "#ff3b3b";
+  ctx.fillRect(-140, 12, (boss.health / boss.maxHealth) * 280, 12);
+  ctx.fillStyle = "#fff";
+  ctx.font = "12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(`VOID GATE ${boss.health}/${boss.maxHealth}`, 0, 8);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(x, y + 28);
+  ctx.fillStyle = "#141a25";
+  ctx.beginPath();
+  ctx.arc(0, 0, 34, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#ff4d4d";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.fillStyle = "#7d35ff";
+  ctx.beginPath();
+  ctx.arc(0, 0, 19, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawHazards() {
@@ -538,6 +683,27 @@ function drawPowerUps() {
   });
 }
 
+function drawBossShards() {
+  bossShards.forEach((shard) => {
+    ctx.beginPath();
+    ctx.arc(shard.x, shard.y, shard.radius, 0, Math.PI * 2);
+    ctx.fillStyle = shard.color;
+    ctx.fill();
+    if (shard.explosive) {
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#ffd166";
+      ctx.stroke();
+    }
+  });
+}
+
+function drawConfetti() {
+  confettiPieces.forEach((piece) => {
+    ctx.fillStyle = piece.color;
+    ctx.fillRect(piece.x, piece.y, piece.size, piece.size * 0.7);
+  });
+}
+
 function drawBuffMessage() {
   if (buffMessageTimer <= 0) {
     return;
@@ -554,6 +720,67 @@ function drawBuffMessage() {
   ctx.restore();
 }
 
+function spawnConfetti(x, y) {
+  for (let i = 0; i < 18; i += 1) {
+    confettiPieces.push({
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 220,
+      vy: -120 - Math.random() * 140,
+      size: 4 + Math.random() * 4,
+      color: ["#ffd166", "#ff6b6b", "#7df9ff", "#b388ff"][Math.floor(Math.random() * 4)],
+      life: 1.2,
+    });
+  }
+}
+
+function burstShard(x, y) {
+  for (let i = 0; i < 6; i += 1) {
+    bossShards.push({
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 180,
+      vy: -140 - Math.random() * 90,
+      radius: 4 + Math.random() * 4,
+      color: ["#ffd166", "#ff6b6b", "#7df9ff"][Math.floor(Math.random() * 3)],
+      explosive: false,
+    });
+  }
+}
+
+function spawnBossShard() {
+  const styles = [
+    { radius: 11, color: "#ffd59e", vx: (Math.random() - 0.5) * 90, vy: 180 + Math.random() * 80, explosive: false },
+    { radius: 15, color: "#ff6b6b", vx: (Math.random() - 0.5) * 120, vy: 190 + Math.random() * 90, explosive: false },
+    { radius: 24, color: "#0f0f11", vx: (Math.random() - 0.5) * 60, vy: 220 + Math.random() * 80, explosive: false },
+    { radius: 13, color: "#b388ff", vx: (Math.random() - 0.5) * 110, vy: 205 + Math.random() * 90, explosive: true },
+  ];
+  const style = styles[Math.floor(Math.random() * styles.length)];
+  bossShards.push({
+    x: canvas.width / 2 + (Math.random() - 0.5) * 80,
+    y: 132,
+    vx: style.vx,
+    vy: style.vy,
+    radius: style.radius,
+    color: style.color,
+    explosive: style.explosive,
+  });
+}
+
+function handlePointerDown(event) {
+  const rect = canvas.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
+  const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
+  for (let i = powerUps.length - 1; i >= 0; i -= 1) {
+    const powerUp = powerUps[i];
+    if (Math.hypot(powerUp.x - x, powerUp.y - y) <= powerUp.radius + 6) {
+      collectPowerUp(powerUp);
+      powerUps.splice(i, 1);
+      break;
+    }
+  }
+}
+
 window.addEventListener("keydown", (event) => {
   keys[event.key] = true;
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d"].includes(event.key)) {
@@ -565,6 +792,7 @@ window.addEventListener("keyup", (event) => {
   keys[event.key] = false;
 });
 
+canvas.addEventListener("pointerdown", handlePointerDown);
 window.addEventListener("resize", resizeCanvas);
 
 overlayButton.addEventListener("click", startGame);
