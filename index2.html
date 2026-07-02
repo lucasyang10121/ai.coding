@@ -6,10 +6,10 @@
   <title>Dynamic Red Projects</title>
   <style>
     :root {
-      --accent: #ff2d2d;
-      --accent-soft: rgba(255, 45, 45, 0.2);
-      --bg: #080808;
-      --text: #fff6f6;
+      --accent: #b30000;
+      --accent-soft: rgba(179, 0, 0, 0.22);
+      --bg: #0a0505;
+      --text: #fff5f5;
     }
 
     * { box-sizing: border-box; }
@@ -20,7 +20,7 @@
       display: grid;
       place-items: center;
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #7f1d1d, #ef4444, #b91c1c);
+      background: linear-gradient(135deg, #1a0303, #4d0707, #120202);
       background-size: 300% 300%;
       animation: bgMove 8s ease infinite;
       color: var(--text);
@@ -42,7 +42,7 @@
     body::before {
       width: 280px;
       height: 280px;
-      background: #ff7a7a;
+      background: #7a0000;
       top: 8%;
       left: 10%;
     }
@@ -50,7 +50,7 @@
     body::after {
       width: 320px;
       height: 320px;
-      background: #ff1f1f;
+      background: #4d0000;
       bottom: 5%;
       right: 8%;
       animation-direction: reverse;
@@ -61,7 +61,7 @@
       width: 260px;
       height: 260px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 80, 80, 0.35), transparent 70%);
+      background: radial-gradient(circle, rgba(179, 0, 0, 0.4), transparent 70%);
       pointer-events: none;
       transform: translate(-50%, -50%);
       mix-blend-mode: screen;
@@ -84,7 +84,7 @@
       font-size: 3rem;
       margin: 0 0 10px;
       color: var(--accent);
-      text-shadow: 0 0 18px rgba(255, 45, 45, 0.5);
+      text-shadow: 0 0 18px rgba(179, 0, 0, 0.55);
       transform: translateY(8px);
       opacity: 0;
       animation: fadeUp 0.8s ease-out forwards;
@@ -132,14 +132,14 @@
 
     a:hover {
       transform: translateX(6px) scale(1.02);
-      box-shadow: 0 8px 20px rgba(255, 45, 45, 0.2);
-      background: linear-gradient(90deg, rgba(255,45,45,0.35), rgba(255,255,255,0.13));
+      box-shadow: 0 8px 20px rgba(179, 0, 0, 0.25);
+      background: linear-gradient(90deg, rgba(179,0,0,0.38), rgba(255,255,255,0.13));
     }
 
     .status {
       margin-top: 18px;
       font-size: 0.95rem;
-      color: #ffb3b3;
+      color: #f2b3b3;
       opacity: 0.8;
     }
 
