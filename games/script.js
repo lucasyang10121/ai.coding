@@ -358,8 +358,8 @@ function update(deltaTime) {
 
   for (let i = powerUps.length - 1; i >= 0; i -= 1) {
     const powerUp = powerUps[i];
-    const hitboxRadius = rocket.smallHitboxTimer > 0 ? rocket.size * 0.58 : rocket.size;
-    if (Math.hypot(powerUp.x - rocket.x, powerUp.y - rocket.y) <= powerUp.radius + hitboxRadius) {
+    const pickupRadius = powerUp.radius + 28 + (rocket.smallHitboxTimer > 0 ? 8 : 0);
+    if (Math.hypot(powerUp.x - rocket.x, powerUp.y - rocket.y) <= pickupRadius) {
       collectPowerUp(powerUp);
       powerUps.splice(i, 1);
     }
@@ -773,7 +773,7 @@ function handlePointerDown(event) {
   const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
   for (let i = powerUps.length - 1; i >= 0; i -= 1) {
     const powerUp = powerUps[i];
-    if (Math.hypot(powerUp.x - x, powerUp.y - y) <= powerUp.radius + 6) {
+    if (Math.hypot(powerUp.x - x, powerUp.y - y) <= powerUp.radius + 24) {
       collectPowerUp(powerUp);
       powerUps.splice(i, 1);
       break;
