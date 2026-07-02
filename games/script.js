@@ -18,6 +18,7 @@ const goalDodges = 500;
 const maxStage = 10;
 const stageDuration = 20;
 const buffThreshold = 20;
+const dayNightInterval = 100;
 
 let gameState = "ready";
 let animationFrameId = null;
@@ -31,6 +32,8 @@ let arenaPaddingX = 90;
 let arenaPaddingY = 110;
 let buffMessage = "";
 let buffMessageTimer = 0;
+let timeOfDay = "day";
+let attackCooldown = 0;
 
 const rocket = {
   x: 0,
@@ -77,7 +80,9 @@ function resetGame() {
   rocket.boostTimer = 0;
   rocket.immunityTimer = 0;
   rocket.smallHitboxTimer = 0;
-  buffMessage = "Gold = speed boost, Cyan = shield, Purple = shrink";
+  timeOfDay = "day";
+  attackCooldown = 0;
+  buffMessage = "Gold = attack blast, Cyan = shield, Purple = shrink";
   buffMessageTimer = 2.8;
   cannons.length = 0;
   buildCannons();
@@ -129,7 +134,7 @@ function updateHud() {
   stageEl.textContent = stage;
   let activeBuff = "OFF";
   if (rocket.boostActive) {
-    activeBuff = `BOOST ${rocket.boostTimer.toFixed(1)}s`;
+    activeBuff = `ATTACK READY`;
   } else if (rocket.immunityTimer > 0) {
     activeBuff = `IMMUNE ${rocket.immunityTimer.toFixed(1)}s`;
   } else if (rocket.smallHitboxTimer > 0) {
@@ -168,6 +173,9 @@ function update(deltaTime) {
     buildCannons();
   }
 
+  if (attackCooldown > 0) {
+    attackCooldown = Math.max(0, attackCooldown - deltaTime);
+  }
   if (rocket.boostActive) {
     rocket.boostTimer = Math.max(0, rocket.boostTimer - deltaTime);
     if (rocket.boostTimer <= 0) {
@@ -193,6 +201,10 @@ function update(deltaTime) {
   }
   if (keys.ArrowDown || keys.s || keys.S) {
     rocket.y += moveSpeed * deltaTime;
+  }
+  if ((keys[" "] || keys.Space || keys.Enter) && attackCooldown <= 0 && rocket.boostActive) {
+    triggerAttack();
+    attackCooldown = 0.45;
   }
 
   rocket.x = Math.max(arenaPaddingX, Math.min(canvas.width - arenaPaddingX, rocket.x));
@@ -238,6 +250,9 @@ function update(deltaTime) {
       if (dodgeCount >= goalDodges) {
         endGame(true);
         return;
+      }
+      if (dodgeCount > 0 && dodgeCount % dayNightInterval === 0) {
+        timeOfDay = timeOfDay === "day" ? "night" : "day";
       }
       if (dodgeCount > 0 && dodgeCount % buffThreshold === 0 && !rocket.boostActive) {
         rocket.boostActive = true;
@@ -312,7 +327,7 @@ function spawnHazard() {
 }
 
 function spawnPowerUp() {
-  const types = ["boost", "immunity", "shrink"];
+  const types = ["attack", "immunity", "shrink"];
   const type = types[Math.floor(Math.random() * types.length)];
   const powerUp = {
     x: 70 + Math.random() * (canvas.width - 140),
@@ -324,10 +339,10 @@ function spawnPowerUp() {
 }
 
 function applyPowerUp(type) {
-  if (type === "boost") {
+  if (type === "attack") {
     rocket.boostActive = true;
     rocket.boostTimer = 10;
-    buffMessage = "Speed boost activated!";
+    buffMessage = "Attack ready! Press space to blast balls.";
   } else if (type === "immunity") {
     rocket.immunityTimer = 8;
     buffMessage = "Shield active! One hit won't stop you.";
@@ -336,6 +351,24 @@ function applyPowerUp(type) {
     buffMessage = "Hitbox reduced!";
   }
   buffMessageTimer = 2.4;
+}
+
+function triggerAttack() {
+  const radius = 90;
+  for (let i = projectiles.length - 1; i >= 0; i -= 1) {
+    const projectile = projectiles[i];
+    if (Math.hypot(projectile.x - rocket.x, projectile.y - rocket.y) <= radius) {
+      projectiles.splice(i, 1);
+    }
+  }
+  for (let i = fallingHazards.length - 1; i >= 0; i -= 1) {
+    const hazard = fallingHazards[i];
+    if (Math.hypot(hazard.x - rocket.x, hazard.y - rocket.y) <= radius) {
+      fallingHazards.splice(i, 1);
+    }
+  }
+  buffMessage = "Blast! Nearby hazards cleared.";
+  buffMessageTimer = 1.8;
 }
 
 function render() {
@@ -350,11 +383,27 @@ function render() {
 }
 
 function drawBackground() {
+  const isNight = timeOfDay === "night";
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, "#101b35");
-  gradient.addColorStop(1, "#060816");
+  gradient.addColorStop(0, isNight ? "#071322" : "#8ed0ff");
+  gradient.addColorStop(0.5, isNight ? "#1f3558" : "#b9e7ff");
+  gradient.addColorStop(1, isNight ? "#060816" : "#f8f6d1");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (isNight) {
+    for (let i = 0; i < 22; i += 1) {
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.beginPath();
+      ctx.arc(60 + i * 38, 70 + ((i % 3) * 20), 1.6 + (i % 2), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else {
+    ctx.fillStyle = "rgba(255, 230, 120, 0.5)";
+    ctx.beginPath();
+    ctx.arc(canvas.width - 140, 95, 42, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.save();
   ctx.strokeStyle = "rgba(255,255,255,0.12)";
@@ -374,9 +423,10 @@ function drawBackground() {
 }
 
 function drawGround() {
-  ctx.fillStyle = "#132336";
+  const isNight = timeOfDay === "night";
+  ctx.fillStyle = isNight ? "#132336" : "#2d6b3b";
   ctx.fillRect(0, canvas.height - 54, canvas.width, 54);
-  ctx.fillStyle = "#27415b";
+  ctx.fillStyle = isNight ? "#27415b" : "#4f9b53";
   ctx.fillRect(0, canvas.height - 54, canvas.width, 8);
 }
 
@@ -397,38 +447,43 @@ function drawCannons() {
 }
 
 function drawRocket() {
+  const scale = 1 + Math.min(3, stage - 1) * 0.04;
   ctx.save();
   ctx.translate(rocket.x, rocket.y);
+  ctx.scale(scale, scale);
 
-  ctx.fillStyle = "#f7f7ff";
+  ctx.fillStyle = "#f8f9ff";
   ctx.beginPath();
-  ctx.moveTo(0, -26);
-  ctx.lineTo(18, 20);
-  ctx.lineTo(10, 18);
-  ctx.lineTo(0, 28);
-  ctx.lineTo(-10, 18);
-  ctx.lineTo(-18, 20);
+  ctx.moveTo(0, -30);
+  ctx.lineTo(16, 20);
+  ctx.lineTo(9, 16);
+  ctx.lineTo(0, 24);
+  ctx.lineTo(-9, 16);
+  ctx.lineTo(-16, 20);
   ctx.closePath();
   ctx.fill();
 
   ctx.fillStyle = "#4a8cff";
   ctx.fillRect(-10, -10, 20, 24);
-  ctx.fillRect(-5, -28, 10, 18);
+  ctx.fillRect(-6, -32, 12, 20);
 
   ctx.fillStyle = "#ff8e3c";
   ctx.beginPath();
   ctx.moveTo(-8, 18);
-  ctx.lineTo(0, 32);
+  ctx.lineTo(0, 34);
   ctx.lineTo(8, 18);
   ctx.closePath();
   ctx.fill();
 
+  ctx.fillStyle = "#ff5f5f";
+  ctx.fillRect(-4, -4, 8, 6);
+
   if (rocket.boostActive) {
     ctx.fillStyle = "#7df9ff";
     ctx.beginPath();
-    ctx.moveTo(-5, 28);
+    ctx.moveTo(-5, 26);
     ctx.lineTo(0, 40);
-    ctx.lineTo(5, 28);
+    ctx.lineTo(5, 26);
     ctx.closePath();
     ctx.fill();
   }
@@ -436,7 +491,7 @@ function drawRocket() {
     ctx.strokeStyle = "#7df9ff";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(0, 2, 24, 0, Math.PI * 2);
+    ctx.arc(0, 2, 28, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.restore();
@@ -470,7 +525,7 @@ function drawPowerUps() {
   powerUps.forEach((powerUp) => {
     ctx.save();
     ctx.translate(powerUp.x, powerUp.y);
-    ctx.fillStyle = powerUp.type === "boost" ? "#f4b942" : powerUp.type === "immunity" ? "#5ce1e6" : "#8f7cff";
+    ctx.fillStyle = powerUp.type === "attack" ? "#f4b942" : powerUp.type === "immunity" ? "#5ce1e6" : "#8f7cff";
     ctx.beginPath();
     ctx.arc(0, 0, powerUp.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -478,7 +533,7 @@ function drawPowerUps() {
     ctx.font = "bold 12px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(powerUp.type === "boost" ? "B" : powerUp.type === "immunity" ? "I" : "S", 0, 0);
+    ctx.fillText(powerUp.type === "attack" ? "A" : powerUp.type === "immunity" ? "I" : "S", 0, 0);
     ctx.restore();
   });
 }
