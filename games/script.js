@@ -8,9 +8,11 @@ const overlay = document.getElementById("overlay");
 const overlayTitle = document.getElementById("overlayTitle");
 const overlayText = document.getElementById("overlayText");
 const overlayButton = document.getElementById("overlayButton");
+const pauseButton = document.getElementById("pauseButton");
 
 const keys = {};
 const projectiles = [];
+const fallingHazards = [];
 const powerUps = [];
 const goalDodges = 500;
 const maxStage = 10;
@@ -25,6 +27,10 @@ let stage = 1;
 let dodgeCount = 0;
 let cannonFlash = 0;
 let powerupTimer = 0;
+let arenaPaddingX = 90;
+let arenaPaddingY = 110;
+let buffMessage = "";
+let buffMessageTimer = 0;
 
 const rocket = {
   x: 0,
@@ -43,12 +49,14 @@ const cannons = [];
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  arenaPaddingX = Math.min(90, Math.max(58, canvas.width * 0.12));
+  arenaPaddingY = Math.min(110, Math.max(84, canvas.height * 0.16));
   if (gameState !== "ready") {
-    rocket.x = Math.min(canvas.width - 40, Math.max(40, rocket.x));
-    rocket.y = Math.min(canvas.height - 60, Math.max(80, rocket.y));
+    rocket.x = Math.min(canvas.width - arenaPaddingX, Math.max(arenaPaddingX, rocket.x));
+    rocket.y = Math.min(canvas.height - 90, Math.max(arenaPaddingY, rocket.y));
   } else {
     rocket.x = canvas.width / 2;
-    rocket.y = canvas.height - 80;
+    rocket.y = canvas.height - 90;
   }
 }
 
@@ -61,13 +69,16 @@ function resetGame() {
   cannonFlash = 0;
   powerupTimer = 0;
   projectiles.length = 0;
+  fallingHazards.length = 0;
   powerUps.length = 0;
   rocket.x = canvas.width / 2;
-  rocket.y = canvas.height - 80;
+  rocket.y = canvas.height - 90;
   rocket.boostActive = false;
   rocket.boostTimer = 0;
   rocket.immunityTimer = 0;
   rocket.smallHitboxTimer = 0;
+  buffMessage = "Gold = speed boost, Cyan = shield, Purple = shrink";
+  buffMessageTimer = 2.8;
   cannons.length = 0;
   buildCannons();
   updateHud();
@@ -88,6 +99,18 @@ function startGame() {
   overlay.classList.add("hidden");
   if (animationFrameId) cancelAnimationFrame(animationFrameId);
   animationFrameId = requestAnimationFrame(loop);
+}
+
+function togglePause() {
+  if (gameState === "running") {
+    gameState = "paused";
+    pauseButton.textContent = "Resume";
+  } else if (gameState === "paused") {
+    gameState = "running";
+    pauseButton.textContent = "Pause";
+    lastTimestamp = performance.now();
+    animationFrameId = requestAnimationFrame(loop);
+  }
 }
 
 function endGame(won) {
@@ -135,6 +158,9 @@ function loop(timestamp) {
 
 function update(deltaTime) {
   elapsedTime += deltaTime;
+  if (buffMessageTimer > 0) {
+    buffMessageTimer = Math.max(0, buffMessageTimer - deltaTime);
+  }
 
   if (stage < maxStage && elapsedTime >= stage * stageDuration) {
     stage += 1;
@@ -169,8 +195,8 @@ function update(deltaTime) {
     rocket.y += moveSpeed * deltaTime;
   }
 
-  rocket.x = Math.max(34, Math.min(canvas.width - 34, rocket.x));
-  rocket.y = Math.max(80, Math.min(canvas.height - 60, rocket.y));
+  rocket.x = Math.max(arenaPaddingX, Math.min(canvas.width - arenaPaddingX, rocket.x));
+  rocket.y = Math.max(arenaPaddingY, Math.min(canvas.height - 90, rocket.y));
 
   cannonFlash = Math.max(0, cannonFlash - deltaTime);
 
@@ -184,6 +210,11 @@ function update(deltaTime) {
       cannonFlash = 0.16;
     }
   });
+
+  const hazardSpawnChance = Math.max(0.007, 0.025 - stage * 0.0012);
+  if (Math.random() < hazardSpawnChance) {
+    spawnHazard();
+  }
 
   for (let i = projectiles.length - 1; i >= 0; i -= 1) {
     const projectile = projectiles[i];
@@ -221,6 +252,27 @@ function update(deltaTime) {
     powerupTimer = 0;
   }
 
+  for (let i = fallingHazards.length - 1; i >= 0; i -= 1) {
+    const hazard = fallingHazards[i];
+    hazard.y += hazard.vy * deltaTime;
+    hazard.x += hazard.vx * deltaTime;
+
+    const hitboxRadius = rocket.smallHitboxTimer > 0 ? rocket.size * 0.58 : rocket.size;
+    if (Math.hypot(hazard.x - rocket.x, hazard.y - rocket.y) <= hazard.radius + hitboxRadius) {
+      if (rocket.immunityTimer > 0) {
+        rocket.immunityTimer = 0;
+        fallingHazards.splice(i, 1);
+      } else {
+        endGame(false);
+        return;
+      }
+    }
+
+    if (hazard.y - hazard.radius > canvas.height) {
+      fallingHazards.splice(i, 1);
+    }
+  }
+
   for (let i = powerUps.length - 1; i >= 0; i -= 1) {
     const powerUp = powerUps[i];
     const hitboxRadius = rocket.smallHitboxTimer > 0 ? rocket.size * 0.58 : rocket.size;
@@ -246,6 +298,19 @@ function spawnProjectile(cannon) {
   projectiles.push(projectile);
 }
 
+function spawnHazard() {
+  const size = 8 + Math.random() * 8;
+  const hazard = {
+    x: 80 + Math.random() * (canvas.width - 160),
+    y: -20,
+    vx: (Math.random() - 0.5) * 55,
+    vy: 180 + stage * 20 + Math.random() * 50,
+    radius: size,
+    color: Math.random() > 0.6 ? "#f28c28" : "#ff4d4d",
+  };
+  fallingHazards.push(hazard);
+}
+
 function spawnPowerUp() {
   const types = ["boost", "immunity", "shrink"];
   const type = types[Math.floor(Math.random() * types.length)];
@@ -262,20 +327,26 @@ function applyPowerUp(type) {
   if (type === "boost") {
     rocket.boostActive = true;
     rocket.boostTimer = 10;
+    buffMessage = "Speed boost activated!";
   } else if (type === "immunity") {
     rocket.immunityTimer = 8;
+    buffMessage = "Shield active! One hit won't stop you.";
   } else if (type === "shrink") {
     rocket.smallHitboxTimer = 8;
+    buffMessage = "Hitbox reduced!";
   }
+  buffMessageTimer = 2.4;
 }
 
 function render() {
   drawBackground();
   drawGround();
   drawCannons();
+  drawHazards();
   drawPowerUps();
   drawRocket();
   drawProjectiles();
+  drawBuffMessage();
 }
 
 function drawBackground() {
@@ -284,6 +355,12 @@ function drawBackground() {
   gradient.addColorStop(1, "#060816");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(arenaPaddingX, arenaPaddingY, canvas.width - arenaPaddingX * 2, canvas.height - arenaPaddingY * 2 - 40);
+  ctx.restore();
 
   ctx.save();
   ctx.strokeStyle = "rgba(255,255,255,0.08)";
@@ -377,6 +454,18 @@ function drawProjectiles() {
   });
 }
 
+function drawHazards() {
+  fallingHazards.forEach((hazard) => {
+    ctx.beginPath();
+    ctx.arc(hazard.x, hazard.y, hazard.radius, 0, Math.PI * 2);
+    ctx.fillStyle = hazard.color;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#fff2a8";
+    ctx.stroke();
+  });
+}
+
 function drawPowerUps() {
   powerUps.forEach((powerUp) => {
     ctx.save();
@@ -394,6 +483,22 @@ function drawPowerUps() {
   });
 }
 
+function drawBuffMessage() {
+  if (buffMessageTimer <= 0) {
+    return;
+  }
+  ctx.save();
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = "rgba(7, 14, 30, 0.85)";
+  ctx.fillRect(20, 70, 320, 46);
+  ctx.strokeStyle = "rgba(255,255,255,0.22)";
+  ctx.strokeRect(20, 70, 320, 46);
+  ctx.fillStyle = "#f6f7ff";
+  ctx.font = "14px sans-serif";
+  ctx.fillText(buffMessage, 34, 100);
+  ctx.restore();
+}
+
 window.addEventListener("keydown", (event) => {
   keys[event.key] = true;
   if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d"].includes(event.key)) {
@@ -408,6 +513,7 @@ window.addEventListener("keyup", (event) => {
 window.addEventListener("resize", resizeCanvas);
 
 overlayButton.addEventListener("click", startGame);
+pauseButton.addEventListener("click", togglePause);
 
 resizeCanvas();
 updateHud();
