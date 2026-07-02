@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rocket Dodge</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="hud">
+        <div class="stat">
+          <span>Dodges</span>
+          <strong id="score">0</strong>
+        </div>
+        <div class="stat">
+          <span>Stage</span>
+          <strong id="stage">1</strong>
+        </div>
+        <div class="stat">
+          <span>Buff</span>
+          <strong id="buff">OFF</strong>
+        </div>
+        <div class="stat">
+          <span>Goal</span>
+          <strong id="goal">100</strong>
+        </div>
+      </header>
+
+      <div class="game-shell">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="overlay" class="overlay visible">
+          <h1 id="overlayTitle">Rocket Dodge</h1>
+          <p id="overlayText">
+            Guide Rocket through the cannon fire. Use WASD or the arrow keys to move.
+            Every 20 seconds, the cannon speeds up. Every 20 dodges, Rocket gets a
+            10-second speed boost.
+          </p>
+          <button id="overlayButton">Start Game</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
