@@ -100,6 +100,12 @@
       font-size: 0.95rem;
       color: #ff9a9a;
       opacity: 0.85;
+      animation: pulseText 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulseText {
+      0%, 100% { opacity: 0.85; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.02); }
     }
 
     @keyframes slideIn {
@@ -133,35 +139,5 @@
     </ul>
     <p class="status" id="status">Hover a link to see the effect.</p>
   </div>
-  <script>
-    const links = document.querySelectorAll('a');
-    const title = document.querySelector('h1');
-    const glow = document.querySelector('.glow');
-    const status = document.getElementById('status');
-
-    links.forEach((link) => {
-      link.addEventListener('mouseenter', () => {
-        title.style.transform = 'scale(1.05)';
-        title.style.transition = 'transform 0.2s ease';
-        status.textContent = `Hovering ${link.textContent.trim()}...`;
-      });
-
-      link.addEventListener('mouseleave', () => {
-        title.style.transform = 'scale(1)';
-        status.textContent = 'Hover a link to see the effect.';
-      });
-
-      link.addEventListener('click', () => {
-        link.textContent = 'Opening...';
-      });
-    });
-
-    window.addEventListener('mousemove', (event) => {
-      glow.style.left = `${event.clientX}px`;
-      glow.style.top = `${event.clientY}px`;
-      const pulse = 1 + Math.sin(Date.now() / 260) * 0.12;
-      glow.style.transform = `translate(-50%, -50%) scale(${pulse})`;
-    });
-  </script>
 </body>
 </html>

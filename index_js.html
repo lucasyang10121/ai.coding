@@ -62,6 +62,24 @@
       z-index: 1;
     }
 
+    .action {
+      border: none;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: #fff1f2;
+      color: #991b1b;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: 'Trebuchet MS', 'Arial', sans-serif;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin-top: 12px;
+    }
+
+    .action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
     h1 {
       margin: 0 0 10px;
       font-size: 2.7rem;
@@ -126,30 +144,39 @@
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>JavaScript Showcase</h1>
-    <p>This page uses JavaScript to make the experience feel more alive.</p>
-    <ul>
-      <li><a href="web/">Open web</a></li>
-      <li><a href="web2/">Open web2</a></li>
-      <li><a href="index.html">Back to home</a></li>
-    </ul>
-    <div class="status" id="status">Move your mouse over the links.</div>
-  </div>
+  <div class="card" id="app"></div>
 
   <script>
-    const links = document.querySelectorAll('a');
-    const status = document.getElementById('status');
+    const app = document.getElementById('app');
+    const title = document.createElement('h1');
+    const subtitle = document.createElement('p');
+    const button = document.createElement('button');
+    const status = document.createElement('div');
 
-    links.forEach((link) => {
-      link.addEventListener('mouseenter', () => {
-        status.textContent = `You are hovering ${link.textContent.trim()}`;
-      });
+    title.textContent = 'JavaScript Only';
+    subtitle.textContent = 'This page is generated and driven by JavaScript, not by a traditional website layout.';
+    button.textContent = 'Trigger effect';
+    button.className = 'action';
+    status.className = 'status';
+    status.textContent = 'Runtime ready.';
 
-      link.addEventListener('mouseleave', () => {
-        status.textContent = 'Move your mouse over the links.';
-      });
-    });
+    app.appendChild(title);
+    app.appendChild(subtitle);
+    app.appendChild(button);
+    app.appendChild(status);
+
+    let ticks = 0;
+    const updateStatus = () => {
+      ticks += 1;
+      status.textContent = `Runtime tick: ${ticks}`;
+      title.style.transform = 'scale(1.03)';
+      setTimeout(() => {
+        title.style.transform = 'scale(1)';
+      }, 180);
+    };
+
+    button.addEventListener('click', updateStatus);
+    setInterval(updateStatus, 2200);
   </script>
 </body>
 </html>
