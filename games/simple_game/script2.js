@@ -11,6 +11,7 @@ const keys = {};
 let running = false;
 let gameOver = false;
 let won = false;
+let startGraceUntil = 0;
 
 const world = {
   width: canvas.width,
@@ -139,6 +140,7 @@ function resetGame() {
   gameOver = false;
   won = false;
   running = false;
+  startGraceUntil = 0;
   world.gravity = 1;
   player.x = 118;
   player.y = 102;
@@ -185,6 +187,7 @@ function updateHud() {
 
 function beginGame() {
   running = true;
+  startGraceUntil = performance.now() + 1400;
   overlay.classList.add('hidden');
   updateHud();
 }
@@ -304,6 +307,10 @@ function updateCats() {
 }
 
 function checkDetection() {
+  if (!running || gameOver || won || performance.now() < startGraceUntil) {
+    return;
+  }
+
   cats.forEach((cat) => {
     const px = player.x + player.size / 2;
     const py = player.y + player.size / 2;
