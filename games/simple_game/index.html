@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cardboard Mansion</title>
+    <link rel="stylesheet" href="style2.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hud">
+        <div>
+          <p class="eyebrow">Tiny diorama escape</p>
+          <h1>Cardboard Mansion</h1>
+          <p>
+            You are a miniature explorer in a dazzling cardboard mansion. Flip gravity,
+            drop the crate and paperweight onto the pressure plates, and escape before
+            the origami cats spot you.
+          </p>
+        </div>
+        <div class="controls">
+          <div>Move: WASD / Arrow Keys</div>
+          <div>Flip gravity: Space</div>
+          <div>Restart: R</div>
+        </div>
+        <div class="status-card">
+          <div class="pill" id="gravityLabel">Gravity: Normal</div>
+          <div class="pill" id="objective">Objective: Drop both items onto the plates.</div>
+        </div>
+      </section>
+
+      <section style="position: relative;">
+        <canvas id="game" width="960" height="540"></canvas>
+        <div class="overlay" id="overlay">
+          <div class="overlay-card">
+            <h2 id="overlayTitle">A miniature mansion awaits</h2>
+            <p id="overlayText">
+              Flip gravity to make the crate and paperweight fall onto the plates, then slip through the final archway.
+            </p>
+            <button id="startButton">Enter the diorama</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="script2.js"></script>
+  </body>
+</html>
