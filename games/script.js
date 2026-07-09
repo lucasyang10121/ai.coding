@@ -3,6 +3,7 @@ const ctx = canvas.getContext("2d");
 const scoreEl = document.getElementById("score");
 const stageEl = document.getElementById("stage");
 const buffEl = document.getElementById("buff");
+const healthEl = document.getElementById("health");
 const goalEl = document.getElementById("goal");
 const overlay = document.getElementById("overlay");
 const overlayTitle = document.getElementById("overlayTitle");
@@ -15,12 +16,14 @@ const projectiles = [];
 const fallingHazards = [];
 const powerUps = [];
 const bossShards = [];
+const rocketShots = [];
 const confettiPieces = [];
 const goalDodges = 500;
 const maxStage = 10;
 const stageDuration = 20;
-const buffThreshold = 20;
 const dayNightInterval = 100;
+const buffThreshold = 50;
+let checkpointBuffSpawned = false;
 
 let gameState = "ready";
 let animationFrameId = null;
@@ -38,17 +41,19 @@ let timeOfDay = "day";
 let attackCooldown = 0;
 let bossSpawnTimer = 0;
 let bossCheckpointShown = false;
+let stage10CheckpointShown = false;
 
 const rocket = {
   x: 0,
   y: 0,
   size: 28,
   baseSpeed: 320,
-  boostSpeed: 430,
-  boostActive: false,
-  boostTimer: 0,
+  speedBonus: 0,
+  attackEnabled: false,
   immunityTimer: 0,
   smallHitboxTimer: 0,
+  health: 3,
+  maxHealth: 3,
 };
 
 const cannons = [];
@@ -56,6 +61,7 @@ const boss = {
   active: false,
   health: 6000,
   maxHealth: 6000,
+  defeated: false,
 };
 
 function resizeCanvas() {
@@ -98,7 +104,9 @@ function resetGame() {
   boss.active = false;
   boss.health = 6000;
   boss.maxHealth = 6000;
+  boss.defeated = false;
   bossCheckpointShown = false;
+  stage10CheckpointShown = false;
   buffMessage = "Gold = attack blast, Cyan = shield, Purple = shrink";
   buffMessageTimer = 2.8;
   cannons.length = 0;
@@ -190,7 +198,7 @@ function update(deltaTime) {
     buildCannons();
   }
 
-  if (stage === 5 && !boss.active) {
+  if (stage === 5 && !boss.active && !boss.defeated) {
     boss.active = true;
     boss.health = 6000;
     boss.maxHealth = 6000;
@@ -200,6 +208,11 @@ function update(deltaTime) {
       buffMessage = "Checkpoint: Stage 5 — Void Gate. Avoid the black shards.";
       buffMessageTimer = 3.2;
     }
+  }
+  if (stage === 10 && !stage10CheckpointShown) {
+    stage10CheckpointShown = true;
+    buffMessage = "Checkpoint: Stage 10 — MASTER RETURN activated. Finish the storm.";
+    buffMessageTimer = 3.8;
   }
   if (stage !== 5) {
     boss.active = false;
@@ -234,9 +247,9 @@ function update(deltaTime) {
   if (keys.ArrowDown || keys.s || keys.S) {
     rocket.y += moveSpeed * deltaTime;
   }
-  if ((keys[" "] || keys.Space || keys.Enter) && attackCooldown <= 0 && rocket.boostActive) {
+  if ((keys[" "] || keys.Space || keys.Enter) && attackCooldown <= 0 && rocket.attackEnabled) {
     triggerAttack();
-    attackCooldown = 0.45;
+    attackCooldown = 0.28;
   }
 
   rocket.x = Math.max(arenaPaddingX, Math.min(canvas.width - arenaPaddingX, rocket.x));
@@ -346,9 +359,15 @@ function update(deltaTime) {
     }
 
     if (shard.explosive && shard.y > canvas.height * 0.45) {
-      burstShard(shard.x, shard.y);
-      bossShards.splice(i, 1);
-      continue;
+      ctx.beginPath();
+      ctx.arc(shard.x, shard.y, shard.radius + 24, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 209, 95, 0.12)";
+      ctx.fill();
+      if (shard.y > canvas.height * 0.47) {
+        burstShard(shard.x, shard.y);
+        bossShards.splice(i, 1);
+        continue;
+      }
     }
 
     if (shard.y - shard.radius > canvas.height || shard.x < -120 || shard.x > canvas.width + 120) {
@@ -358,10 +377,36 @@ function update(deltaTime) {
 
   for (let i = powerUps.length - 1; i >= 0; i -= 1) {
     const powerUp = powerUps[i];
-    const pickupRadius = powerUp.radius + 28 + (rocket.smallHitboxTimer > 0 ? 8 : 0);
+    const hitboxRadius = rocket.smallHitboxTimer > 0 ? rocket.size * 0.58 : rocket.size;
+    const pickupRadius = powerUp.radius + hitboxRadius + 16;
     if (Math.hypot(powerUp.x - rocket.x, powerUp.y - rocket.y) <= pickupRadius) {
       collectPowerUp(powerUp);
       powerUps.splice(i, 1);
+    }
+  }
+
+  for (let i = rocketShots.length - 1; i >= 0; i -= 1) {
+    const shot = rocketShots[i];
+    shot.y += shot.vy * deltaTime;
+    shot.life -= deltaTime;
+
+    const gateCenterX = canvas.width / 2;
+    const gateHit = boss.active && shot.y <= arenaPaddingY + 70 && Math.abs(shot.x - gateCenterX) <= 110;
+    if (gateHit) {
+      boss.health = Math.max(0, boss.health - 120);
+      rocketShots.splice(i, 1);
+      if (boss.health <= 0) {
+        boss.active = false;
+        boss.defeated = true;
+        buffMessage = "Void Gate destroyed! Stage 5 cleared.";
+        buffMessageTimer = 3.4;
+        spawnConfetti(shot.x, shot.y);
+      }
+      continue;
+    }
+
+    if (shot.y + shot.radius < 0 || shot.life <= 0) {
+      rocketShots.splice(i, 1);
     }
   }
 
@@ -409,9 +454,9 @@ function spawnPowerUp() {
   const types = ["attack", "immunity", "shrink"];
   const type = types[Math.floor(Math.random() * types.length)];
   const powerUp = {
-    x: 70 + Math.random() * (canvas.width - 140),
-    y: canvas.height - 44,
-    radius: 16,
+    x: arenaPaddingX + 40 + Math.random() * (canvas.width - arenaPaddingX * 2 - 80),
+    y: arenaPaddingY + 68 + Math.random() * 160,
+    radius: 18,
     type,
   };
   powerUps.push(powerUp);
@@ -419,9 +464,8 @@ function spawnPowerUp() {
 
 function collectPowerUp(powerUp) {
   if (powerUp.type === "attack") {
-    rocket.boostActive = true;
-    rocket.boostTimer = 10;
-    buffMessage = "Attack ready! Press space to blast nearby hazards.";
+    rocket.attackEnabled = true;
+    buffMessage = "Attack unlocked! Press space to fire black rockets.";
   } else if (powerUp.type === "immunity") {
     rocket.immunityTimer = 8;
     buffMessage = "Shield active! One hit won't stop you.";
@@ -434,37 +478,22 @@ function collectPowerUp(powerUp) {
 }
 
 function triggerAttack() {
-  const radius = 90;
-  for (let i = projectiles.length - 1; i >= 0; i -= 1) {
-    const projectile = projectiles[i];
-    if (Math.hypot(projectile.x - rocket.x, projectile.y - rocket.y) <= radius) {
-      projectiles.splice(i, 1);
-    }
+  const shot = {
+    x: rocket.x,
+    y: rocket.y - 26,
+    vx: 0,
+    vy: -620,
+    radius: 7,
+    life: 1.1,
+  };
+  if (!rocketShots) {
+    rocketShots = [];
   }
-  for (let i = fallingHazards.length - 1; i >= 0; i -= 1) {
-    const hazard = fallingHazards[i];
-    if (Math.hypot(hazard.x - rocket.x, hazard.y - rocket.y) <= radius) {
-      fallingHazards.splice(i, 1);
-    }
-  }
-  for (let i = bossShards.length - 1; i >= 0; i -= 1) {
-    const shard = bossShards[i];
-    if (Math.hypot(shard.x - rocket.x, shard.y - rocket.y) <= radius) {
-      bossShards.splice(i, 1);
-      if (boss.active) {
-        boss.health = Math.max(0, boss.health - 280);
-      }
-    }
-  }
-  if (boss.active && boss.health <= 0) {
-    boss.active = false;
-    buffMessage = "Void Gate shattered!";
-    buffMessageTimer = 2.2;
-  } else {
-    buffMessage = "Blast! Nearby hazards cleared.";
-    buffMessageTimer = 1.8;
-  }
+  rocketShots.push(shot);
+  buffMessage = "Rocket fired!";
+  buffMessageTimer = 1.2;
 }
+
 
 function render() {
   drawBackground();
@@ -474,6 +503,7 @@ function render() {
   drawHazards();
   drawPowerUps();
   drawRocket();
+  drawRocketShots();
   drawProjectiles();
   drawBossShards();
   drawConfetti();
@@ -617,6 +647,18 @@ function drawProjectiles() {
     ctx.fill();
     ctx.lineWidth = 3;
     ctx.strokeStyle = "#8f0000";
+    ctx.stroke();
+  });
+}
+
+function drawRocketShots() {
+  rocketShots.forEach((shot) => {
+    ctx.beginPath();
+    ctx.arc(shot.x, shot.y, shot.radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#1de9b6";
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#0d7765";
     ctx.stroke();
   });
 }
