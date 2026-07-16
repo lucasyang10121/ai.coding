@@ -70,12 +70,13 @@ function resizeCanvas() {
   arenaPaddingX = Math.min(90, Math.max(58, canvas.width * 0.12));
   arenaPaddingY = Math.min(110, Math.max(84, canvas.height * 0.16));
   canvas.style.touchAction = "none";
+  const rocketBottomLimit = canvas.height - 118;
   if (gameState !== "ready") {
     rocket.x = Math.min(canvas.width - arenaPaddingX, Math.max(arenaPaddingX, rocket.x));
-    rocket.y = Math.min(canvas.height - 90, Math.max(arenaPaddingY, rocket.y));
+    rocket.y = Math.min(rocketBottomLimit, Math.max(arenaPaddingY, rocket.y));
   } else {
     rocket.x = canvas.width / 2;
-    rocket.y = canvas.height - 90;
+    rocket.y = rocketBottomLimit;
   }
 }
 
@@ -93,7 +94,7 @@ function resetGame() {
   bossShards.length = 0;
   confettiPieces.length = 0;
   rocket.x = canvas.width / 2;
-  rocket.y = canvas.height - 90;
+  rocket.y = canvas.height - 118;
   rocket.boostActive = false;
   rocket.boostTimer = 0;
   rocket.immunityTimer = 0;
@@ -254,7 +255,7 @@ function update(deltaTime) {
   }
 
   rocket.x = Math.max(arenaPaddingX, Math.min(canvas.width - arenaPaddingX, rocket.x));
-  rocket.y = Math.max(arenaPaddingY, Math.min(canvas.height - 90, rocket.y));
+  rocket.y = Math.max(arenaPaddingY, Math.min(canvas.height - 118, rocket.y));
 
   cannonFlash = Math.max(0, cannonFlash - deltaTime);
 
