@@ -1,7 +1,7 @@
 """
 FOOTBALL LEGACY — Casual Catch Edition
 Single-file Pygame game: run with  python game.py
-Requires:  pip install pygame
+
 """
 
 import math, os, json, random, sys
