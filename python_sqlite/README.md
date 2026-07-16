@@ -34,3 +34,6 @@ python -m unittest discover -s tests -v
 - app.py: Flask application and routes
 - blog.db: SQLite database file created automatically
 - tests/: regression tests for auth and posting flows
+
+
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/0349c2b4-1d56-4982-a819-3ab3090f5269" />
