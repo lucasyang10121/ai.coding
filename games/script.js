@@ -127,6 +127,7 @@ function buildCannons() {
 function startGame() {
   resetGame();
   overlay.classList.add("hidden");
+  overlayButton.blur();
   if (animationFrameId) cancelAnimationFrame(animationFrameId);
   animationFrameId = requestAnimationFrame(loop);
 }
@@ -825,7 +826,7 @@ function handlePointerDown(event) {
 
 window.addEventListener("keydown", (event) => {
   keys[event.key] = true;
-  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d"].includes(event.key)) {
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d", " "].includes(event.key)) {
     event.preventDefault();
   }
 });
