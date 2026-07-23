@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSS Animation Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000000;
+      color: #f8fafc;
+      font-family: Arial, sans-serif;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glow {
+      position: fixed;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 76, 76, 0.35), transparent 70%);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      filter: blur(8px);
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      width: min(90vw, 620px);
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin: 0 0 12px;
+      animation: fadeUp 0.8s ease-out;
+    }
+
+    p {
+      font-size: 1.2rem;
+      margin: 0 0 20px;
+      opacity: 0.9;
+      animation: fadeUp 1s ease-out 0.1s both;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      opacity: 0;
+      transform: translateX(-80px);
+      animation: slideIn 0.8s ease-out forwards;
+      margin-bottom: 14px;
+    }
+
+    li:nth-child(1) { animation-delay: 0.2s; }
+    li:nth-child(2) { animation-delay: 0.45s; }
+    li:nth-child(3) { animation-delay: 0.7s; }
+
+    a {
+      display: inline-block;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #1d4ed8;
+      font-weight: bold;
+      text-decoration: none;
+      font-size: 1.1rem;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+    }
+
+    a:hover {
+      transform: translateX(6px) scale(1.03);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+    }
+
+    .status {
+      margin-top: 16px;
+      font-size: 0.95rem;
+      color: #ff9a9a;
+      opacity: 0.85;
+      animation: pulseText 1.8s ease-in-out infinite;
+    }
+
+    .game-section {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .game-section h2 {
+      margin: 0 0 8px;
+      font-size: 1.3rem;
+    }
+
+    .game-section p {
+      margin: 0 0 12px;
+      font-size: 0.98rem;
+    }
+
+    .game-frame {
+      width: 100%;
+      min-height: 580px;
+      border: 0;
+      border-radius: 16px;
+      background: #020617;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
+
+    @keyframes pulseText {
+      0%, 100% { opacity: 0.85; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.02); }
+    }
+
+    @keyframes slideIn {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="card">
+    <h1>My Projects</h1>
+    <p>Click on each of the links and explore my projects.</p>
+    <ul>
+      <li><a href="web/">Open web</a></li>
+      <li><a href="web2/">Open web2</a></li>
+      <li><a href="index.html">Back to home</a></li>
+    </ul>
+
+    <div class="game-section">
+      <h2>Rocket Dodge</h2>
+      <p>Play the dodge game directly from this page.</p>
+      <iframe class="game-frame" src="games/index.html" title="Rocket Dodge game"></iframe>
+    </div>
+
+    <p class="status" id="status">Hover a link to see the effect.</p>
+  </div>
+</body>
+</html>

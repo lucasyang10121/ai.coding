@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JavaScript Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #7f1d1d, #ef4444, #b91c1c);
+      background-size: 300% 300%;
+      animation: bgMove 8s ease infinite;
+      color: #fff7ed;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      padding: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    body::before,
+    body::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.35;
+      animation: orbit 10s ease-in-out infinite;
+    }
+
+    body::before {
+      width: 280px;
+      height: 280px;
+      background: #ff7a7a;
+      top: 8%;
+      left: 10%;
+    }
+
+    body::after {
+      width: 320px;
+      height: 320px;
+      background: #ff1f1f;
+      bottom: 5%;
+      right: 8%;
+      animation-direction: reverse;
+    }
+
+    .card {
+      width: min(90vw, 620px);
+      padding: 32px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 20px 44px rgba(0,0,0,0.35);
+      position: relative;
+      z-index: 1;
+    }
+
+    .action {
+      border: none;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: #fff1f2;
+      color: #991b1b;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: 'Trebuchet MS', 'Arial', sans-serif;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin-top: 12px;
+    }
+
+    .action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 2.7rem;
+      color: #fff7ed;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    p {
+      margin: 0 0 20px;
+      line-height: 1.7;
+      color: #ffe7e7;
+      font-size: 1.05rem;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    a {
+      display: inline-block;
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: #fff1f2;
+      color: #991b1b;
+      text-decoration: none;
+      font-weight: bold;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      font-family: 'Trebuchet MS', 'Arial', sans-serif;
+    }
+
+    a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      background: #ffe4e6;
+    }
+
+    .status {
+      margin-top: 16px;
+      font-size: 0.95rem;
+      color: #ffe4e6;
+      font-style: italic;
+    }
+
+    @keyframes bgMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes orbit {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(30px, -20px) scale(1.1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="app"></div>
+
+  <script>
+    const app = document.getElementById('app');
+    const title = document.createElement('h1');
+    const subtitle = document.createElement('p');
+    const button = document.createElement('button');
+    const status = document.createElement('div');
+
+    title.textContent = 'JavaScript Only';
+    subtitle.textContent = 'This page is generated and driven by JavaScript, not by a traditional website layout.';
+    button.textContent = 'Trigger effect';
+    button.className = 'action';
+    status.className = 'status';
+    status.textContent = 'Runtime ready.';
+
+    app.appendChild(title);
+    app.appendChild(subtitle);
+    app.appendChild(button);
+    app.appendChild(status);
+
+    let ticks = 0;
+    const updateStatus = () => {
+      ticks += 1;
+      status.textContent = `Runtime tick: ${ticks}`;
+      title.style.transform = 'scale(1.03)';
+      setTimeout(() => {
+        title.style.transform = 'scale(1)';
+      }, 180);
+    };
+
+    button.addEventListener('click', updateStatus);
+    setInterval(updateStatus, 2200);
+  </script>
+</body>
+</html>
